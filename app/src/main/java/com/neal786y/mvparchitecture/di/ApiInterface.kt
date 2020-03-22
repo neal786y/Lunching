@@ -15,19 +15,19 @@ interface ApiInterface {
         "user-key: ${BuildConfig.API_KEY}"
     )
     @GET("locations")
-    fun getLocations(@Query("query") query: String, @Query("count") count: Int = 100): Call<LocationResponseDto>
+    fun getLocations(@Query("query") query: String, @Query("count") count: Int = 10): Call<LocationResponseDto>
 
     @Headers(
         "Content-Type: application/json",
         "user-key: ${BuildConfig.API_KEY}"
     )
     @GET("search")
-    fun getRestaurantsByEntityId(@Query("entity_id") entityId: Int, @Query("entity_type") entityType: String, @Query("count") count: Int = 100): Call<RestaurantResponseDto>
+    fun getRestaurantsByEntityId(@Query("entity_id") entityId: Int, @Query("entity_type") entityType: String): Call<RestaurantResponseDto>
 
     @Headers(
         "Content-Type: application/json",
         "user-key: ${BuildConfig.API_KEY}"
     )
     @GET("search")
-    fun getRestaurantsByLatLon(@Query("lat") lat: Double, @Query("lon") lon: Double, @Query("count") count: Int = 100): Call<RestaurantResponseDto>
+    fun getRestaurantsByLatLon(@Query("lat") lat: Double, @Query("lon") lon: Double): Call<RestaurantResponseDto>
 }
