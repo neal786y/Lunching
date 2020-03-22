@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Lunching</string>
+    <string name="detailUrlKey">detailUrl</string>
+
+    <string name="no_internet_text">No internet connection</string>
+    <string name="somethingWentWrong">Something went wrong</string>
+    <string name="baseUrl">https://developers.zomato.com/api/v2.1/</string>
+
+
+    <string name="lunchingText">Lunching</string>
+    <string name="lunchingSubText">What for lunch today?</string>
+    <string name="lunchingSubSubText">You have already ordered lunch for today</string>
+    <string name="search_for_your_location_text">Search for your location</string>
+    <string name="please_search_your_location_to_explore_restaurants_nearby_text">Please search your location to\nexplore restaurants nearby</string>
+    <string name="no_service_provider_text">No Service Provider is available</string>
+    <string name="gps_is_not_enabled_text">GPS is not Enabled!</string>
+    <string name="turn_on_gps_msg">Do you want to turn on GPS?</string>
+    <string name="yes_text">Yes</string>
+    <string name="no_text">No</string>
+
+</resources>
