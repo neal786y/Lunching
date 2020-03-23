@@ -1,6 +1,7 @@
 package com.neal786y.mvparchitecture.main.activity
 
 import android.content.Intent
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -13,6 +14,7 @@ import com.neal786y.mvparchitecture.base.Constants.Companion.ENTITY_TYPE
 import com.neal786y.mvparchitecture.base.Constants.Companion.LOCATION_REQUEST_CODE
 import com.neal786y.mvparchitecture.base.Constants.Companion.PERMISSION_REQUEST_CODE
 import com.neal786y.mvparchitecture.main.adaper.RestaurantAdapter
+import com.neal786y.mvparchitecture.main.listeners.OnLocationAvailableListener
 import com.neal786y.mvparchitecture.main.listeners.OnRestaurantItemClickListener
 import com.neal786y.mvparchitecture.main.pojo.zomato.search_restaurants.response.RestaurantDto
 import com.neal786y.mvparchitecture.main.pojo.zomato.search_restaurants.response.RestaurantResponseDto
@@ -49,7 +51,7 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
         super.onCreate(savedInstanceState)
 
         linearLayoutSearch.setOnClickListener {
-            val intent  = Intent(this@RestaurantActivity, LocationActivity::class.java)
+            val intent = Intent(this@RestaurantActivity, LocationActivity::class.java)
             startActivityForResult(intent, LOCATION_REQUEST_CODE)
         }
 
@@ -57,7 +59,7 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
         recyclerViewRestaurants.adapter = restaurantAdapter
         recyclerViewRestaurants.setEmptyView(textViewEmptyMessage)
 
-        restaurantAdapter.mOnRestaurantItemClickListener = object : OnRestaurantItemClickListener{
+        restaurantAdapter.mOnRestaurantItemClickListener = object : OnRestaurantItemClickListener {
             override fun onRestaurantItemClick(restaurantsDto: RestaurantDto) {
                 val intent = Intent(this@RestaurantActivity, DetailWebActivity::class.java)
                 intent.putExtra(getString(R.string.detailUrlKey), restaurantsDto.url)
@@ -65,22 +67,27 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
             }
         }
 
-        //Fetch restaurants
-        if(!isPermissionGranted(this)) requestPermission(this, PERMISSION_REQUEST_CODE)
-        else fetchRestaurantsByLatLon()
-    }
-
-    private fun fetchRestaurantsByLatLon() {
-
         locationTracker = LocationTracker(this)
 
-        if (locationTracker.canGetLocation()) {
-            val longitude: Double = locationTracker.getLongitude()
-            val latitude: Double = locationTracker.getLatitude()
-            presenter?.getRestaurantsByLatLon(retrofit, latitude, longitude);
-        } else {
-            locationTracker.showSettingsAlert()
+        locationTracker.onLocationAvailableListener = object : OnLocationAvailableListener {
+            override fun onLocationAvailable(location: Location) {
+                val longitude: Double = location.getLongitude()
+                val latitude: Double = location.getLatitude()
+                presenter?.getRestaurantsByLatLon(retrofit, latitude, longitude);
+            }
+
+            override fun onPermisionRequired() {
+                requestPermission(this@RestaurantActivity, Constants.PERMISSION_REQUEST_CODE)
+            }
+
+            override fun checkPermission(): Boolean {
+                return isPermissionGranted(this@RestaurantActivity)
+            }
+
         }
+
+        if (!isPermissionGranted(this)) requestPermission(this, PERMISSION_REQUEST_CODE)
+        else locationTracker.getLastLocation()
     }
 
     private fun fetchRestaurantsByEntityId(entityId: Int, entityType: String) {
@@ -89,13 +96,13 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        when(requestCode){
+        when (requestCode) {
             333 -> {
                 //fetch restraunts from entity id and entity type
                 data?.let {
                     val entityId: Int = it.getIntExtra(ENTITY_ID, 0)
                     val entityType: String? = it.getStringExtra(ENTITY_TYPE)
-                    if(entityId > 0) fetchRestaurantsByEntityId(entityId, entityType ?: "")
+                    if (entityId > 0) fetchRestaurantsByEntityId(entityId, entityType ?: "")
                 }
             }
         }
@@ -104,18 +111,22 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
-        grantResults: IntArray) {
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        when(requestCode) {
+        when (requestCode) {
             PERMISSION_REQUEST_CODE -> {
-                if(isPermissionGranted(this)){
-                    //fetch restaurants
-                    fetchRestaurantsByLatLon()
-
+                if (isPermissionGranted(this)) {
+                    locationTracker.getLastLocation();
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume();
+        if (isPermissionGranted(this)) locationTracker.getLastLocation()
     }
 
     override fun hideLoading() {
@@ -138,7 +149,7 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
 
     override fun onLoad(data: Any) {
         runOnUiThread {
-            when(data){
+            when (data) {
                 is RestaurantResponseDto -> {
                     //load restaurants
                     restaurantAdapter.addAll(data.restaurants as List<RestaurantsDto>?)
@@ -162,10 +173,5 @@ class RestaurantActivity : BaseActivity<RestaurantView, RestaurantPresenter>(), 
 
     override fun onNetworkLost() {
         showShortToast(getString(R.string.no_internet_text))
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        locationTracker.stopListener()
     }
 }

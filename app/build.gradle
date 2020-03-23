@@ -21,10 +21,10 @@ android {
 
             buildConfigField("String", "API_KEY", "\"c245f6bd16717045227a603544405c7e\"")
 
-            debuggable true
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//            debuggable true
+//            minifyEnabled true
+//            shrinkResources true
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
             buildConfigField("String", "API_KEY", "\"c245f6bd16717045227a603544405c7e\"")
@@ -63,4 +63,6 @@ dependencies {
 
     //Cardview
     implementation 'androidx.cardview:cardview:1.0.0'
+
+    implementation 'com.google.android.gms:play-services-location:17.0.0'
 }
